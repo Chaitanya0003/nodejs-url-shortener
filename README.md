@@ -1,11 +1,12 @@
 ﻿# Node.js URL Shortener
 
-A lightweight URL shortener service built with **Node.js**, **Express**, and **MongoDB**. It generates 8-character short IDs for any URL and automatically tracks visit analytics on every redirect.
+A URL shortener service built with **Node.js**, **Express**, **MongoDB**, and **EJS**. It generates 8-character short IDs for any URL, provides a web UI to manage and view all shortened URLs, and tracks visit analytics on every redirect.
 
 ---
 
 ## Features
 
+- Web UI to shorten URLs and view all entries in a table
 - Generate a short URL from any long URL
 - Redirect users from a short URL to the original destination
 - Track every visit with a timestamp
@@ -15,13 +16,14 @@ A lightweight URL shortener service built with **Node.js**, **Express**, and **M
 
 ## Tech Stack
 
-| Layer      | Technology              |
-|------------|-------------------------|
-| Runtime    | Node.js                 |
-| Framework  | Express 5               |
-| Database   | MongoDB (via Mongoose)  |
-| ID Gen     | nanoid (8-char IDs)     |
-| Dev Server | nodemon                 |
+| Layer        | Technology              |
+|--------------|-------------------------|
+| Runtime      | Node.js                 |
+| Framework    | Express 5               |
+| Database     | MongoDB (via Mongoose)  |
+| View Engine  | EJS                     |
+| ID Gen       | nanoid (8-char IDs)     |
+| Dev Server   | nodemon                 |
 
 ---
 
@@ -29,16 +31,18 @@ A lightweight URL shortener service built with **Node.js**, **Express**, and **M
 
 ```
 nodejs-url-shortener/
-├── index.js              # App entry point, server bootstrap
-├── connection.js         # MongoDB connection helper
+├── index.js                  # App entry point, server bootstrap
+├── connection.js             # MongoDB connection helper
 ├── package.json
 ├── routes/
-│   └── url.js            # Route definitions
+│   ├── url.js                # URL shortening & redirect routes
+│   └── staticRouter.js       # Home page route
 ├── controllers/
-│   └── url.js            # Request handlers / business logic
+│   └── url.js                # Request handlers / business logic
 ├── models/
-│   └── url.js            # Mongoose schema & model
-└── views/                # (reserved for future UI)
+│   └── url.js                # Mongoose schema & model
+└── views/
+    └── home.ejs              # Home page (form + URL table)
 ```
 
 ---
@@ -71,40 +75,46 @@ The server starts on **http://localhost:8001**
 
 ---
 
+## Web UI
+
+Open **http://localhost:8001** in your browser.
+
+- Paste any long URL into the input field and click **Shorten**
+- The generated short link is displayed immediately after submission
+- A table below the form lists every shortened URL with its Short ID, original URL, and total click count
+
+---
+
 ## API Reference
 
 ### 1. Shorten a URL
 
 **POST** `/url`
 
-**Request Body (JSON)**
+Accepts both `application/json` and `application/x-www-form-urlencoded` (used by the HTML form).
+
+**Request Body**
 
 ```json
-{
-  "url": "https://www.example.com/some/very/long/path"
-}
+{ "url": "https://www.example.com/some/very/long/path" }
 ```
 
-**Response `201`**
+**Response**
 
-```json
-{
-  "shortId": "aB3dEf9Z"
-}
-```
+Renders the home page (`home.ejs`) with the generated `shortId` displayed.
 
 ---
 
 ### 2. Redirect to Original URL
 
-**GET** `/:shortId`
+**GET** `/url/:shortId`
 
-Redirects the client to the original URL associated with the given `shortId`. Every visit is recorded with a timestamp.
+Redirects the client to the original URL. Every visit is recorded with a Unix timestamp.
 
 **Example**
 
 ```
-GET http://localhost:8001/aB3dEf9Z
+GET http://localhost:8001/url/aB3dEf9Z
 → 302 Redirect → https://www.example.com/some/very/long/path
 ```
 
